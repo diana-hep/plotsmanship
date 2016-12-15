@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8 />
+    <title>Plotsmanship</title>
+    <link href='css/base/latest/base.css' rel='stylesheet'>
+    <link href='css/highlight.min.css' rel='stylesheet'>
+</head>
+<body>
+<div class='pad2 margin2 col8'></div>
+<div id='content' class='prose margin2 pad4 col8'></div>
+<script src='js/highlight.min.js'></script>
+<script src='js/marked.js'></script>
+<script>
+var content = document.getElementById('content');
+
+function xhr(url, callback) {
+    var x = new XMLHttpRequest(),
+        twoHundred = /^[23]0\d$/;
+    x.onreadystatechange = function() {
+        if (4 == x.readyState && 0 !== x.status) {
+            if (twoHundred.test(x.status)) callback(null, x);
+            else callback(x, null);
+        }
+    };
+    x.onerror = function(e) { return callback(e, null); };
+    x.open('GET', url);
+    x.send();
+}
+
+function values(o) {
+    var v = [];
+    for (var i in o) if (o.hasOwnProperty(i)) v.push(o[i]);
+    return v;
+}
+
+marked.setOptions({
+    gfm: true,
+    tables: true,
+    breaks: false,
+    pedantic: false,
+    sanitize: false,
+    smartLists: true,
+    langPrefix: 'language-',
+    highlight: function (code, lang) {
+        if (!lang) return code;
+
+        // Aliases
+        if (lang === 'js') lang = 'javascript';
+
+        try {
+            return hljs.highlight(lang, code).value;
+        } catch(e) {
+            return hljs.highlightAuto(code).value;
+        }
+    }
+});
+
+function load(gist) {
+    var gistUrl = 'https://api.github.com/gists/' + gist;
+    xhr(gistUrl, function(err, x) {
+        if (err) return content.innerHTML = 'Error loading Gist';
+        else var d = JSON.parse(x.responseText);
+        var c = (values(d.files || {}).filter(function(file) {
+            return (file.filename.indexOf('.md') !== -1 ||
+                    file.language === 'Markdown');
+        })[0] || {}).content;
+        if (c) content.innerHTML = marked(c);
+    });
+}
+
+function loadHash() {
+    load(window.location.hash.length > 1 ?
+        window.location.hash.substr(1) : 'ab82988eecbe4ce7f0cf8b33066b026e');
+}
+
+loadHash();
+</script>
+</body>
+</html>
