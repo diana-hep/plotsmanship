@@ -61,11 +61,14 @@ function load(gist) {
     xhr(gistUrl, function(err, x) {
         if (err) return content.innerHTML = 'Error loading Gist';
         else var d = JSON.parse(x.responseText);
-        var c = (values(d.files || {}).filter(function(file) {
-            return (file.filename.indexOf('.md') !== -1 ||
-                    file.language === 'Markdown');
-        })[0] || {}).content;
-        if (c) content.innerHTML = marked(c);
+        if (d.owner.login == "jpivarski") {
+            var c = (values(d.files || {}).filter(function(file) {
+                return (file.filename.indexOf('.md') !== -1 ||
+                        file.language === 'Markdown');
+            })[0] || {}).content;
+            if (c) content.innerHTML = marked(c);
+        }
+        else return content.innerHTML = 'Not accepting Gists from ' + d.owner.login;
     });
 }
 
